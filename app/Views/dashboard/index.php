@@ -4,7 +4,7 @@
 <div class="space-y-6">
     <!-- Encabezado -->
     <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">Paneeeel Principal</h1>
+        <h1 class="text-3xl font-bold">Panel Principal</h1>
         <button onclick="openModal()" class="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building-2 mr-2">
                 <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>

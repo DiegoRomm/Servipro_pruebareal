@@ -5,7 +5,7 @@ use App\Models\SedeModel;
 use App\Models\TrampaModel;
 use App\Models\PlanoModel;
 
-class Home extends BaseController
+class inicio extends BaseController
 {
     public function index(): string
     {
@@ -28,6 +28,6 @@ class Home extends BaseController
             'sedes' => $sedes
         ];
 
-        return view('login', $data);
+        return view('dashboard/index', $data);
     }
 }

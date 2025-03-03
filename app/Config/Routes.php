@@ -6,7 +6,9 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
+
 $routes->get('locations', 'Locations::index');
+$routes->get('Inicio', 'Inicio::index');
 $routes->get('blueprints', 'Blueprints::index');
 $routes->get('incidents', 'Incidents::index');
 $routes->get('inventory/traps', 'Inventory::traps');

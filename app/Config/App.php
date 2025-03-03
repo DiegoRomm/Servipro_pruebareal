@@ -38,7 +38,8 @@ class App extends BaseConfig
      *
      * Typically, this will be your `index.php` file, unless you've renamed it to
      * something else. If you have configured your web server to remove this file
-     * from your site URIs, set this variable to an empty string.
+     * from your site URIs, set this variable t
+     * o an empty string.
      */
     public string $indexPage = 'index.php';
 
