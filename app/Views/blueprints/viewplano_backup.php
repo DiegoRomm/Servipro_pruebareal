@@ -130,11 +130,6 @@
         100% { transform: translate(-50%, -50%) scale(1); }
     }
     
-    /* Estilos para las filas seleccionadas en la tabla */
-    tr.selected {
-        background-color: #e6f2ff !important;
-    }
-
     /* Estilos adicionales para zonas específicas */
     .zona-circulo {
         border-radius: 50%;
@@ -330,32 +325,12 @@
                         <i class="fas fa-draw-polygon mr-2"></i>
                         Agregar Zona
                     </button>
-                </div>
-            </div>
 
-            <!-- Lista de Trampas -->
-            <div class="bg-white rounded-lg shadow-md p-4">
-                <h3 class="font-semibold mb-4">Lista de Trampas</h3>
-                <div class="overflow-y-auto max-h-[400px]">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left">ID</th>
-                                <th class="px-4 py-2 text-left">Nombre</th>
-                                <th class="px-4 py-2 text-left">Tipo</th>
-                                <th class="px-4 py-2 text-left">Ubicación</th>
-                                <th class="px-4 py-2 text-left">Zona</th>
-                                <th class="px-4 py-2 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trampasTableBody">
-                            <tr>
-                                <td colspan="6" class="px-4 py-2 text-center text-gray-500">
-                                    No hay trampas registradas
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Botón Agregar Incidencia -->
+                    <button id="btnAgregarIncidencia" class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 mt-2">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Agregar Incidencia
+                    </button>
                 </div>
             </div>
         </div>
@@ -538,17 +513,6 @@
                         // Colocar las trampas
                         window.puntos.forEach(punto => {
                             marcarTrampa(punto);
-                        });
-                        
-                        // Actualizar la tabla
-                        actualizarTablaTrampas();
-                        
-                        // Asegurar que todos los marcadores tengan el evento de clic
-                        document.querySelectorAll('.trap-marker').forEach(marker => {
-                            const newMarker = addTrapClickEvent(marker);
-                            if (marker !== newMarker && marker.parentNode) {
-                                marker.parentNode.replaceChild(newMarker, marker);
-                            }
                         });
                         
                         // Reposicionar las trampas para asegurar que estén en la posición correcta
@@ -872,11 +836,6 @@
                 marcasExistentes.forEach(marca => marca.remove());
             }
             
-            // Limpiar tabla
-            if (typeof actualizarTablaTrampas === 'function') {
-                actualizarTablaTrampas();
-            }
-            
             // Resetear modos de edición
             if (planoContainer) {
                 planoContainer.dataset.modoEdicion = '';
@@ -998,7 +957,6 @@
                     window.puntos.splice(index, 1);
                     this.remove();
                     reindexarTrampas();
-                    actualizarTablaTrampas();
                 }
             });
 
@@ -1070,13 +1028,25 @@
                         return;
                     }
                     
+                    // Ocultar el selector de trampas ya que se seleccionó directamente
+                    document.getElementById('trampaSelector').style.display = 'none';
+                    
+                    // Mostrar la información de la trampa
+                    document.getElementById('trampaInfo').style.display = 'block';
+                    
                     // Actualizar la información de la trampa en el modal
                     document.getElementById('trampa_id').value = trampa.id_trampa || trampa.id; // Usar id_trampa si existe, si no usar id
                     document.getElementById('trampaIdDisplay').textContent = trampa.id_trampa || 'Sin ID';
                     document.getElementById('trampaDbIdDisplay').textContent = trampa.id || 'Sin ID';
                     document.getElementById('trampaNombreDisplay').textContent = trampa.nombre || 'Sin nombre';
                     document.getElementById('trampaZonaDisplay').textContent = trampa.zona || 'Sin zona';
-                    
+                }
+
+                    document.getElementById('trampaIdDisplay').textContent = trampa.id_trampa || 'Sin ID';
+                    document.getElementById('trampaDbIdDisplay').textContent = trampa.id || 'Sin ID';
+                    document.getElementById('trampaNombreDisplay').textContent = trampa.nombre || 'Sin nombre';
+                    document.getElementById('trampaZonaDisplay').textContent = trampa.zona || 'Sin zona';
+
                     // Mostrar el modal
                     document.getElementById('modalIncidencia').classList.remove('hidden');
                     
@@ -1259,7 +1229,6 @@
 
                     // Crear el marcador visual
                     const marcador = marcarTrampa(nuevaTrampa);
-                    actualizarTablaTrampas();
                     
                     // Guardar en la base de datos
                     guardarTrampaEnBD(nuevaTrampa);
@@ -1386,93 +1355,9 @@
 
         // Modificar la función de eliminar en actualizarTablaTrampas
         function actualizarTablaTrampas() {
-            const tbody = document.getElementById('trampasTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-
-            if (!window.puntos || window.puntos.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="px-4 py-2 text-center text-gray-500">
-                            No hay trampas registradas
-                        </td>
-                    </tr>`;
-                return;
-            }
-
-            // Modificar el encabezado de la tabla para incluir la columna de zona
-            const thead = document.querySelector('table thead tr');
-            if (thead) {
-                thead.innerHTML = `
-                    <th class="px-4 py-2 text-left">ID</th>
-                    <th class="px-4 py-2 text-left">Nombre</th>
-                    <th class="px-4 py-2 text-left">Tipo</th>
-                    <th class="px-4 py-2 text-left">Ubicación</th>
-                    <th class="px-4 py-2 text-left">Zona</th>
-                    <th class="px-4 py-2 text-right">Acciones</th>
-                `;
-            }
-
-            window.puntos.forEach((punto, index) => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 cursor-pointer';
-                tr.innerHTML = `
-                    <td class="px-4 py-2">${punto.id || `T${index + 1}`}</td>
-                    <td class="px-4 py-2">${punto.nombre || 'Sin nombre'}</td>
-                    <td class="px-4 py-2">${getTipoTrampa(punto.tipo)}</td>
-                    <td class="px-4 py-2">(${Math.round(punto.x)}, ${Math.round(punto.y)})</td>
-                    <td class="px-4 py-2">${punto.zona || 'Sin zona'}</td>
-                    <td class="px-4 py-2 text-right">
-                        <button class="text-red-600 hover:text-red-800 delete-trap" title="Eliminar trampa">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-                
-                // Agregar evento de clic a la fila
-                tr.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-trap')) return;
-                    
-                    document.querySelectorAll('.trap-marker').forEach(marker => {
-                        marker.classList.remove('highlighted');
-                    });
-                    
-                    tbody.querySelectorAll('tr').forEach(row => {
-                        row.classList.remove('selected');
-                    });
-                    
-                    const marker = document.querySelector(`.trap-marker[data-index="${index}"]`);
-                    if (marker) {
-                        marker.classList.add('highlighted');
-                        marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                    
-                    tr.classList.add('selected');
-                });
-
-                // Modificar el evento del botón eliminar
-                const deleteBtn = tr.querySelector('.delete-trap');
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (confirm('¿Está seguro de que desea eliminar esta trampa?')) {
-                        // Eliminar el marcador del plano
-                        const marker = document.querySelector(`.trap-marker[data-index="${index}"]`);
-                        if (marker) marker.remove();
-                        
-                        // Eliminar del array de puntos
-                        window.puntos.splice(index, 1);
-                        
-                        // Reindexar las trampas restantes
-                        reindexarTrampas();
-                        
-                        // Actualizar la tabla
-                        actualizarTablaTrampas();
-                    }
-                });
-                
-                tbody.appendChild(tr);
-            });
+            // Esta función ya no es necesaria ya que se eliminó la tabla de trampas
+            // Mantenemos la función vacía para evitar errores en el código existente
+            return;
         }
 
         // Función auxiliar para obtener el nombre del tipo de trampa
@@ -1955,9 +1840,6 @@
                             puntos[index] = trampa;
                         }
                         
-                        // Actualizar la tabla de trampas
-                        actualizarTablaTrampas();
-                        
                         // Redibujar el canvas para mostrar el nuevo ID
                         dibujarPlano();
                     }
@@ -2025,9 +1907,6 @@
             trampaSeleccionada = null;
             offsetX = 0;
             offsetY = 0;
-            
-            // Actualizar tabla
-            actualizarTablaTrampas();
         });
 
         // Función para reposicionar todas las trampas
@@ -2074,6 +1953,92 @@
                 hideTooltip();
             }
         });
+
+        // Reposicionar trampas cuando la imagen se carga
+        planoImage.addEventListener('load', function() {
+            setTimeout(reposicionarTrampas, 100);
+        });
+        
+        // Función para abrir el modal de incidencia desde el botón
+        function abrirModalIncidencia() {
+            // Mostrar el selector de trampas
+            document.getElementById('trampaSelector').style.display = 'block';
+            
+            // Ocultar la información de trampa (se mostrará cuando se seleccione una)
+            document.getElementById('trampaInfo').style.display = 'none';
+            
+            // Limpiar el formulario
+            document.getElementById('formIncidencia').reset();
+            
+            // Cargar las trampas disponibles en el selector
+            cargarTrampasEnSelector();
+            
+            // Mostrar el modal
+            document.getElementById('modalIncidencia').classList.remove('hidden');
+            
+            // Asegurar que los marcadores estén por debajo del modal
+            document.querySelectorAll('.trap-marker').forEach(marker => {
+                marker.style.zIndex = '5';
+            });
+        }
+        
+        // Función para cargar las trampas en el selector
+        function cargarTrampasEnSelector() {
+            const selector = document.getElementById('trampa_selector');
+            selector.innerHTML = '<option value="">Seleccione una trampa</option>';
+            
+            // Si no hay puntos, no hay trampas para mostrar
+            if (!window.puntos || window.puntos.length === 0) {
+                return;
+            }
+            
+            // Agregar cada trampa al selector
+            window.puntos.forEach(trampa => {
+                const option = document.createElement('option');
+                option.value = trampa.id_trampa || trampa.id;
+                option.textContent = `${trampa.nombre || 'Sin nombre'} - (${Math.round(trampa.x)}, ${Math.round(trampa.y)}) - ${trampa.zona || 'Sin zona'}`;
+                selector.appendChild(option);
+            });
+            
+            // Agregar evento de cambio al selector
+            selector.addEventListener('change', actualizarInfoTrampaSeleccionada);
+        }
+        
+        // Función para actualizar la información de la trampa seleccionada
+        function actualizarInfoTrampaSeleccionada() {
+            const trampaId = document.getElementById('trampa_selector').value;
+            
+            if (!trampaId) {
+                document.getElementById('trampaInfo').style.display = 'none';
+                return;
+            }
+            
+            // Buscar la trampa seleccionada
+            const trampa = window.puntos.find(p => p.id_trampa === trampaId || p.id === trampaId);
+            
+            if (trampa) {
+                // Actualizar la información visible
+                document.getElementById('trampaIdDisplay').textContent = trampa.id_trampa || 'Sin ID';
+                document.getElementById('trampaDbIdDisplay').textContent = trampa.id || 'Sin ID';
+                document.getElementById('trampaNombreDisplay').textContent = trampa.nombre || 'Sin nombre';
+                document.getElementById('trampaZonaDisplay').textContent = trampa.zona || 'Sin zona';
+                
+                // Actualizar el campo oculto
+                document.getElementById('trampa_id').value = trampa.id_trampa || trampa.id;
+                
+                // Mostrar la información
+                document.getElementById('trampaInfo').style.display = 'block';
+                
+                // Resaltar la trampa en el mapa
+                const index = window.puntos.indexOf(trampa);
+                if (index !== -1) {
+                    resaltarTrampa(index);
+                }
+            }
+        }
+        
+        // Agregar evento al botón de agregar incidencia
+        document.getElementById('btnAgregarIncidencia').addEventListener('click', abrirModalIncidencia);
     });
 </script>
 
