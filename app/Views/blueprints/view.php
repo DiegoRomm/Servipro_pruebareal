@@ -1,6 +1,48 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<style>
+    .plano-preview {
+        height: 160px;
+        background-color: #f3f4f6;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .plano-preview img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    
+    .plano-card {
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .plano-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .plano-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .plano-actions {
+        margin-top: auto;
+    }
+</style>
+
 <div class="space-y-6">
     <!-- Encabezado con botón de regreso y agregar -->
     <div class="flex items-center justify-between">
@@ -37,11 +79,31 @@
     <?php else: ?>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($planos as $plano): ?>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold"><?= $plano['nombre'] ?></h3>
-                <p class="text-gray-500 text-sm mt-2"><?= $plano['descripcion'] ?></p>
-                <div class="mt-4 text-sm text-gray-500">
-                    Creado: <?= date('d/m/Y H:i', strtotime($plano['fecha_creacion'])) ?>
+            <div class="bg-white rounded-lg shadow-md p-6 plano-card">
+                <div class="plano-preview">
+                    <?php if (!empty($plano['preview_image'])): ?>
+                        <img src="<?= $plano['preview_image'] ?>" alt="Vista previa del plano" />
+                    <?php else: ?>
+                        <div class="text-gray-400 flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p class="text-sm">Sin imagen</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <div class="plano-content">
+                    <h3 class="text-lg font-semibold"><?= $plano['nombre'] ?></h3>
+                    <p class="text-gray-500 text-sm mt-2"><?= $plano['descripcion'] ?></p>
+                    <div class="mt-4 text-sm text-gray-500">
+                        Creado: <?= date('d/m/Y H:i', strtotime($plano['fecha_creacion'])) ?>
+                    </div>
+                    <div class="mt-4 plano-actions">
+                        <a href="<?= base_url('blueprints/viewplano/' . $plano['id']) ?>" 
+                           class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                            Ver Plano
+                        </a>
+                    </div>
                 </div>
             </div>
             <?php endforeach; ?>

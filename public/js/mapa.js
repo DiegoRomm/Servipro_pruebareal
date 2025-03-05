@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${punto.id || 'N/A'}</td>
+                <td>${punto.nombre || 'Sin nombre'}</td>
                 <td>
                     <i class="fas ${getIconoTrampa(punto.tipo)}"></i>
                     ${getNombreTipoTrampa(punto.tipo)}

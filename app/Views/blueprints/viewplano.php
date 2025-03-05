@@ -4,23 +4,186 @@
 <!-- Agregar en el head -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    .trap-marker {
-        cursor: pointer;
-        padding: 5px;
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 50%;
-        z-index: 10;
+    /* Estilos para el contenedor del plano */
+    #planoContainer {
+        position: relative;
+        width: 100%;
+        height: 600px;
+        overflow: auto;
+        border: 1px solid #ccc;
+        background-color: #f5f5f5;
     }
-
-    .zona {
+    
+    /* Estilos para la imagen del plano */
+    #planoImage {
+        max-width: 100%;
+        display: none;
+    }
+    
+    /* Estilos para el texto de placeholder */
+    #placeholderText {
         position: absolute;
-        border: 2px dashed #666;
-        background: rgba(100, 100, 100, 0.1);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #999;
+        text-align: center;
+    }
+    
+    /* Estilos para los marcadores de trampas */
+    .trap-marker {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background-color: rgba(255, 0, 0, 0.7);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.2s ease;
+        padding: 5px;
+    }
+    
+    .trap-marker:hover {
+        transform: translate(-50%, -50%) scale(1.2);
+        background-color: rgba(255, 0, 0, 0.9);
+    }
+    
+    .trap-marker.highlighted {
+        background-color: #ff6600;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.5);
+    }
+    
+    /* Estilos para el tooltip */
+    .trap-tooltip {
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 100;
+        display: none;
+    }
+    
+    .trap-tooltip button {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .trap-tooltip button:hover {
+        background-color: #3a80d2;
+    }
+    
+    /* Estilos para las zonas */
+    .zone-polygon, .zona {
+        position: absolute;
+        background-color: rgba(0, 128, 255, 0.2);
+        border: 2px dashed rgba(0, 128, 255, 0.5);
+        pointer-events: none;
         cursor: move;
     }
+    
+    /* Estilos para el dropdown de trampas */
+    .trap-menu {
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 100;
+        width: 200px;
+    }
+    
+    .trap-menu a {
+        display: block;
+        padding: 8px 12px;
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .trap-menu a:hover {
+        background-color: #f5f5f5;
+    }
+    
+    /* Animaciones */
+    @keyframes highlight {
+        0% { box-shadow: 0 0 0 0 rgba(255, 102, 0, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 102, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 102, 0, 0); }
+    }
+    
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.3); background-color: #ff6600; }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    /* Estilos para las filas seleccionadas en la tabla */
+    tr.selected {
+        background-color: #e6f2ff !important;
+    }
 
+    /* Estilos adicionales para zonas específicas */
     .zona-circulo {
         border-radius: 50%;
+    }
+
+    .zona-poligono {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(100, 100, 100, 0.1);
+        border: 2px dashed #666;
+        pointer-events: auto;
+        cursor: pointer;
+    }
+
+    .zona-poligono-temporal {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 0, 0.2);
+        border: 2px dashed #ff0;
+    }
+
+    .punto-poligono {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #ff0;
+        border: 1px solid #000;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 20;
+    }
+
+    .zona-texto {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+        pointer-events: none;
+        white-space: nowrap;
     }
 
     .resize-handle {
@@ -35,6 +198,49 @@
     @keyframes highlight {
         0% { background-color: rgba(255, 255, 0, 0.5); }
         100% { background-color: transparent; }
+    }
+
+    .trap-tooltip {
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: none;
+        min-width: 150px;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .trap-tooltip button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .trap-tooltip button:hover {
+        background-color: #45a049;
+    }
+    
+    .trap-marker.highlighted {
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.7);
+        transform: scale(1.2);
+        z-index: 1000;
     }
 </style>
 
@@ -57,6 +263,10 @@
             <button id="btnGuardar" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 <i class="fas fa-save"></i>
                 Guardar Estado
+            </button>
+            <button id="btnDescargar" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-download"></i>
+                Descargar Estado
             </button>
             <button id="btnCargar" class="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                 <i class="fas fa-upload"></i>
@@ -86,8 +296,8 @@
                 <h3 class="font-semibold mb-4">Herramientas</h3>
                 <div class="space-y-2">
                     <!-- Dropdown Agregar Trampa -->
-                    <div class="dropdown">
-                        <button id="btnAgregarTrampa" class="w-full flex items-center justify-between px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <div class="dropdown relative">
+                        <button id="btnAgregarTrampa" class="w-full flex items-center justify-between px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-2">
                             <span class="flex items-center">
                                 <i class="fas fa-plus-circle mr-2"></i>
                                 Agregar Trampa
@@ -96,7 +306,7 @@
                                 <path d="m6 9 6 6 6-6"/>
                             </svg>
                         </button>
-                        <div class="trap-menu hidden mt-2 w-full bg-white border rounded-lg shadow-lg">
+                        <div class="trap-menu hidden absolute w-full bg-white border rounded-lg shadow-lg z-50">
                             <a href="#" class="dropdown-item block px-4 py-2 hover:bg-gray-100" data-trap-type="rodent">
                                 <i class="fas fa-mouse mr-2"></i> Trampa para Roedores
                             </a>
@@ -116,7 +326,7 @@
                     </button>
 
                     <!-- Botón Agregar Zona -->
-                    <button id="btnAgregarZona" class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <button id="btnAgregarZona" class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mt-2">
                         <i class="fas fa-draw-polygon mr-2"></i>
                         Agregar Zona
                     </button>
@@ -131,6 +341,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-2 text-left">ID</th>
+                                <th class="px-4 py-2 text-left">Nombre</th>
                                 <th class="px-4 py-2 text-left">Tipo</th>
                                 <th class="px-4 py-2 text-left">Ubicación</th>
                                 <th class="px-4 py-2 text-left">Zona</th>
@@ -139,7 +350,7 @@
                         </thead>
                         <tbody id="trampasTableBody">
                             <tr>
-                                <td colspan="5" class="px-4 py-2 text-center text-gray-500">
+                                <td colspan="6" class="px-4 py-2 text-center text-gray-500">
                                     No hay trampas registradas
                                 </td>
                             </tr>
@@ -154,6 +365,72 @@
 <!-- Agregar los inputs ocultos -->
 <input type="file" id="planoInput" class="form-control" accept="image/*" style="display: none;">
 <input type="file" id="cargarEstadoInput" accept="application/json" style="display: none;">
+
+<!-- Modal para Agregar Incidencia -->
+<div id="modalIncidencia" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-2">Registrar Incidencia</h3>
+                <div id="trampaInfo" class="mb-4 p-3 bg-gray-100 rounded-md">
+                    <p class="text-sm"><strong>Trampa ID:</strong> <span id="trampaIdDisplay">-</span></p>
+                    <p class="text-sm"><strong>ID Base de Datos:</strong> <span id="trampaDbIdDisplay">-</span></p>
+                    <p class="text-sm"><strong>Nombre:</strong> <span id="trampaNombreDisplay">-</span></p>
+                    <p class="text-sm"><strong>Ubicación:</strong> <span id="trampaZonaDisplay">-</span></p>
+                </div>
+                <form id="formIncidencia">
+                    <input type="hidden" name="trampa_id" id="trampa_id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Plaga</label>
+                            <select name="tipo_plaga" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Seleccione un tipo</option>
+                                <option value="mosca">Mosca</option>
+                                <option value="cucaracha">Cucaracha</option>
+                                <option value="hormiga">Hormiga</option>
+                                <option value="roedor">Roedor</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Incidencia</label>
+                            <select name="tipo_incidencia"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="Detección">Detección</option>
+                                <option value="Captura">Captura</option>
+                                <option value="Avistamiento">Avistamiento</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Inspector</label>
+                            <input type="text" name="inspector" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Nombre del inspector">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Notas Adicionales</label>
+                            <textarea name="notas" rows="3"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="closeIncidenciaModal()"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">
+                            Guardar Incidencia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Scripts -->
 <script src="<?= base_url('js/mapa.js') ?>"></script>
@@ -188,6 +465,20 @@
         let tooltipElement = null;
         let confirmButton = null;
 
+        // Crear el tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'trap-tooltip';
+        tooltip.innerHTML = `
+            <button type="button" class="add-incidence-btn">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Agregar incidencia
+            </button>
+        `;
+        document.body.appendChild(tooltip);
+
+        // Variables para el manejo del tooltip y modal de incidencias
+        let activeMarker = null;
+
         // Función para desactivar todos los botones excepto Seleccionar Imagen y Cargar
         function desactivarBotones() {
             btnGuardar.disabled = true;
@@ -219,6 +510,75 @@
         // Desactivar botones al inicio
         desactivarBotones();
 
+        // Cargar estado guardado en la base de datos si existe
+        <?php if (!empty($plano['archivo'])): ?>
+        try {
+            const estadoGuardado = JSON.parse('<?= addslashes($plano['archivo']) ?>');
+            if (estadoGuardado && estadoGuardado.imagen) {
+                // Cargar la imagen
+                planoImage.src = estadoGuardado.imagen;
+                planoImage.style.display = 'block';
+                document.getElementById('placeholderText').style.display = 'none';
+                
+                // Activar botones
+                activarBotones();
+                
+                // Guardar las trampas en una variable global
+                if (estadoGuardado.trampas && Array.isArray(estadoGuardado.trampas)) {
+                    window.puntos = estadoGuardado.trampas;
+                    
+                    // Crear una función para colocar las trampas después de que la imagen esté completamente cargada
+                    const colocarTrampas = function() {
+                        // Limpiar marcadores existentes para evitar duplicados
+                        document.querySelectorAll('.trap-marker').forEach(marker => marker.remove());
+                        
+                        // Colocar las trampas
+                        window.puntos.forEach(punto => {
+                            marcarTrampa(punto);
+                        });
+                        
+                        // Actualizar la tabla
+                        actualizarTablaTrampas();
+                    };
+                    
+                    // Si la imagen ya está cargada, colocar las trampas inmediatamente
+                    if (planoImage.complete) {
+                        colocarTrampas();
+                    } else {
+                        // Si la imagen aún no está cargada, esperar a que se cargue
+                        planoImage.onload = colocarTrampas;
+                    }
+                }
+                
+                // Guardar las zonas en una variable global
+                if (estadoGuardado.zonas && Array.isArray(estadoGuardado.zonas)) {
+                    window.zonas = estadoGuardado.zonas;
+                    
+                    // Crear una función para colocar las zonas después de que la imagen esté completamente cargada
+                    const colocarZonas = function() {
+                        // Limpiar zonas existentes para evitar duplicados
+                        document.querySelectorAll('.zona, .zona-poligono, .zona-texto').forEach(zona => zona.remove());
+                        
+                        // Colocar las zonas
+                        window.zonas.forEach(zona => {
+                            crearZonaExistente(zona);
+                        });
+                    };
+                    
+                    // Si la imagen ya está cargada, colocar las zonas inmediatamente
+                    if (planoImage.complete) {
+                        colocarZonas();
+                    } else {
+                        // Si la imagen aún no está cargada, esperar a que se cargue
+                        planoImage.addEventListener('load', colocarZonas);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar el estado guardado:', error);
+        }
+        <?php endif; ?>
+
         // Botón Seleccionar Imagen
         btnSeleccionarImagen.addEventListener('click', () => {
             planoInput.click();
@@ -241,6 +601,75 @@
 
         // Botón Guardar Estado
         btnGuardar.addEventListener('click', () => {
+            // Verificar que la imagen esté cargada completamente
+            if (!planoImage.complete || !planoImage.naturalWidth) {
+                mostrarMensaje('La imagen no está completamente cargada. Espere un momento y vuelva a intentarlo.', 'error');
+                return;
+            }
+            
+            // Verificar y limpiar los datos antes de guardar
+            const trampasProcesadas = [];
+            if (window.puntos && window.puntos.length > 0) {
+                window.puntos.forEach(punto => {
+                    // Crear una copia limpia del punto con coordenadas válidas
+                    const puntoProcesado = {
+                        id: punto.id,
+                        tipo: punto.tipo,
+                        x: parseFloat(parseFloat(punto.x).toFixed(2)),
+                        y: parseFloat(parseFloat(punto.y).toFixed(2)),
+                        zona: punto.zona
+                    };
+                    trampasProcesadas.push(puntoProcesado);
+                });
+            }
+            
+            const estado = {
+                imagen: planoImage.src,
+                trampas: trampasProcesadas,
+                zonas: window.zonas || []
+            };
+            
+            // Convertir el estado a JSON
+            const jsonData = JSON.stringify(estado);
+            
+            // Guardar en la base de datos mediante AJAX
+            fetch('<?= base_url('blueprints/guardar_estado') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    'plano_id': <?= $plano['id'] ?>,
+                    'json_data': jsonData
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    mostrarMensaje(data.message, 'success');
+                    
+                    // Actualizar los puntos en memoria con los datos procesados
+                    window.puntos = trampasProcesadas;
+                } else {
+                    // Mostrar mensaje de error
+                    mostrarMensaje(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error al guardar el estado', 'error');
+            });
+        });
+        
+        // Botón Descargar Estado
+        btnDescargar.addEventListener('click', () => {
             const estado = {
                 imagen: planoImage.src,
                 trampas: window.puntos || [],
@@ -253,6 +682,154 @@
             a.download = 'estado-plano.json';
             a.click();
         });
+
+        // Función para mostrar mensajes
+        function mostrarMensaje(mensaje, tipo) {
+            // Crear elemento de alerta
+            const alerta = document.createElement('div');
+            alerta.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg ${tipo === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+            alerta.textContent = mensaje;
+            
+            // Agregar al DOM
+            document.body.appendChild(alerta);
+            
+            // Eliminar después de 3 segundos
+            setTimeout(() => {
+                alerta.style.opacity = '0';
+                alerta.style.transition = 'opacity 0.5s';
+                setTimeout(() => alerta.remove(), 500);
+            }, 3000);
+        }
+
+        // Función para crear una zona existente desde datos guardados
+        function crearZonaExistente(zonaData) {
+            const planoContainer = document.getElementById('planoContainer');
+            const planoImage = document.getElementById('planoImage');
+            
+            // Obtener las dimensiones actuales
+            const imagenRect = planoImage.getBoundingClientRect();
+            const containerRect = planoContainer.getBoundingClientRect();
+            
+            // Calcular la posición relativa al contenedor
+            const imagenLeft = imagenRect.left - containerRect.left;
+            const imagenTop = imagenRect.top - containerRect.top;
+            
+            // Manejar zonas de tipo polígono
+            if (zonaData.tipo === 'poligono' && zonaData.puntos && Array.isArray(zonaData.puntos)) {
+                // Crear el elemento del polígono
+                const poligono = document.createElement('div');
+                poligono.className = 'zona-poligono';
+                
+                // Calcular el path del polígono - las coordenadas ya están relativas a la imagen
+                // Necesitamos convertirlas a coordenadas absolutas para visualización
+                const path = zonaData.puntos.map(p => `${p.x + imagenLeft}px ${p.y + imagenTop}px`).join(',');
+                poligono.style.clipPath = `polygon(${path})`;
+                
+                // Crear el contenedor del texto
+                const textoZona = document.createElement('div');
+                textoZona.className = 'zona-texto';
+                textoZona.textContent = zonaData.nombre || 'Sin nombre';
+                
+                // Posicionar el texto en el centro de la zona
+                if (zonaData.centro) {
+                    // Las coordenadas del centro ya están relativas a la imagen
+                    // Necesitamos convertirlas a coordenadas absolutas para visualización
+                    textoZona.style.left = `${imagenLeft + zonaData.centro.x}px`;
+                    textoZona.style.top = `${imagenTop + zonaData.centro.y}px`;
+                } else {
+                    // Calcular el centro si no está definido
+                    const centroX = zonaData.puntos.reduce((sum, p) => sum + p.x, 0) / zonaData.puntos.length;
+                    const centroY = zonaData.puntos.reduce((sum, p) => sum + p.y, 0) / zonaData.puntos.length;
+                    textoZona.style.left = `${imagenLeft + centroX}px`;
+                    textoZona.style.top = `${imagenTop + centroY}px`;
+                }
+                
+                // Agregar ID al elemento del DOM
+                poligono.dataset.zonaId = zonaData.id || `Z${window.zonas.indexOf(zonaData) + 1}`;
+                poligono.dataset.index = window.zonas.indexOf(zonaData);
+                
+                // Agregar manejador para eliminar con clic derecho
+                poligono.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    if (confirm('¿Desea eliminar esta zona?')) {
+                        const index = parseInt(this.dataset.index);
+                        window.zonas.splice(index, 1);
+                        this.remove();
+                        textoZona.remove();
+                        reindexarZonas();
+                    }
+                });
+                
+                // Agregar al contenedor
+                planoContainer.appendChild(poligono);
+                planoContainer.appendChild(textoZona);
+                
+                return poligono;
+            }
+            
+            // Código existente para zonas rectangulares o circulares
+            const zonaElement = document.createElement('div');
+            zonaElement.className = 'zona';
+            if (zonaData.tipo === 'circulo') {
+                zonaElement.classList.add('zona-circulo');
+            }
+            
+            // Posicionar la zona - las coordenadas ya están relativas a la imagen
+            zonaElement.style.left = `${imagenLeft + zonaData.x}px`;
+            zonaElement.style.top = `${imagenTop + zonaData.y}px`;
+            zonaElement.style.width = `${zonaData.width}px`;
+            zonaElement.style.height = `${zonaData.height}px`;
+            zonaElement.dataset.index = window.zonas.indexOf(zonaData);
+            
+            // Agregar nombre si existe
+            if (zonaData.nombre) {
+                const nombreElement = document.createElement('div');
+                nombreElement.className = 'absolute top-0 left-0 bg-white px-2 py-1 text-sm font-semibold';
+                nombreElement.textContent = zonaData.nombre;
+                zonaElement.appendChild(nombreElement);
+            }
+            
+            // Agregar manejador para eliminar con clic derecho
+            zonaElement.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (confirm('¿Desea eliminar esta zona?')) {
+                    const index = parseInt(this.dataset.index);
+                    window.zonas.splice(index, 1);
+                    this.remove();
+                    reindexarZonas();
+                }
+            });
+            
+            // Agregar al contenedor
+            planoContainer.appendChild(zonaElement);
+            
+            // Agregar controlador de redimensionamiento
+            const resizeHandle = document.createElement('div');
+            resizeHandle.className = 'resize-handle';
+            resizeHandle.style.bottom = '0';
+            resizeHandle.style.right = '0';
+            zonaElement.appendChild(resizeHandle);
+            
+            return zonaElement;
+        }
+
+        // Función para reindexar las zonas
+        function reindexarZonas() {
+            // Reindexar zonas rectangulares y circulares
+            const zonaElements = document.querySelectorAll('.zona');
+            zonaElements.forEach((zona, index) => {
+                zona.dataset.index = index;
+            });
+            
+            // Reindexar zonas de tipo polígono
+            const poligonoElements = document.querySelectorAll('.zona-poligono');
+            poligonoElements.forEach((poligono, index) => {
+                const zonaIndex = window.zonas.findIndex(z => z.id === poligono.dataset.zonaId);
+                if (zonaIndex !== -1) {
+                    poligono.dataset.index = zonaIndex;
+                }
+            });
+        }
 
         // Función para limpiar completamente el estado
         function limpiarEstadoCompleto() {
@@ -277,7 +854,7 @@
             
             // Limpiar marcadores y zonas del DOM
             if (planoContainer) {
-                const marcasExistentes = planoContainer.querySelectorAll('.trap-marker, .zona');
+                const marcasExistentes = planoContainer.querySelectorAll('.trap-marker, .zona, .zona-poligono, .zona-texto, .punto-poligono');
                 marcasExistentes.forEach(marca => marca.remove());
             }
             
@@ -324,10 +901,17 @@
             cargarEstadoInput.click();
         });
 
-        // Agregar esta función antes del evento DOMContentLoaded
+        // Función para marcar una trampa en el plano
         function marcarTrampa(punto) {
             const planoContainer = document.getElementById('planoContainer');
             const planoImage = document.getElementById('planoImage');
+            
+            // Verificar que la imagen esté cargada
+            if (!planoImage.complete || !planoImage.naturalWidth) {
+                console.warn('La imagen no está completamente cargada. Reintentando en 100ms...');
+                setTimeout(() => marcarTrampa(punto), 100);
+                return;
+            }
             
             // Obtener las dimensiones actuales
             const imagenRect = planoImage.getBoundingClientRect();
@@ -367,7 +951,26 @@
             marcador.appendChild(icon);
 
             // Agregar tooltip con información
-            marcador.title = `${getTipoTrampa(punto.tipo)} - ${punto.id}`;
+            marcador.title = `${getTipoTrampa(punto.tipo)} - ${punto.nombre || 'Sin nombre'} (ID: ${punto.id})`;
+            
+            // Agregar ID visible en el marcador
+            const idLabel = document.createElement('span');
+            idLabel.className = 'trap-id-label';
+            idLabel.textContent = punto.id;
+            idLabel.style.position = 'absolute';
+            idLabel.style.top = '-20px';
+            idLabel.style.left = '50%';
+            idLabel.style.transform = 'translateX(-50%)';
+            idLabel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            idLabel.style.color = 'white';
+            idLabel.style.padding = '2px 5px';
+            idLabel.style.borderRadius = '3px';
+            idLabel.style.fontSize = '9px';
+            idLabel.style.whiteSpace = 'nowrap';
+            idLabel.style.maxWidth = '120px';
+            idLabel.style.overflow = 'hidden';
+            idLabel.style.textOverflow = 'ellipsis';
+            marcador.appendChild(idLabel);
 
             // Agregar evento para eliminar
             marcador.addEventListener('contextmenu', function(e) {
@@ -382,222 +985,109 @@
             });
 
             // Agregar evento de clic al marcador
-            marcador.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Remover resaltado de todas las trampas
-                document.querySelectorAll('.trap-marker').forEach(marker => {
-                    marker.classList.remove('highlighted');
-                });
-                
-                // Remover selección de todas las filas
-                const tbody = document.getElementById('trampasTableBody');
-                tbody.querySelectorAll('tr').forEach(row => {
-                    row.classList.remove('selected');
-                });
-                
-                // Resaltar este marcador
-                this.classList.add('highlighted');
-                
-                // Encontrar y resaltar la fila correspondiente
-                const index = parseInt(this.dataset.index);
-                const filas = tbody.querySelectorAll('tr');
-                if (filas[index]) {
-                    filas[index].classList.add('selected');
-                    filas[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
+            addTrapClickEvent(marcador);
 
             planoContainer.appendChild(marcador);
+            return marcador;
         }
 
-        // Modificar la parte del código que carga el estado
-        cargarEstadoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const estado = JSON.parse(e.target.result);
-                        
-                        if (!estado.imagen) {
-                            throw new Error('El archivo no contiene una imagen');
-                        }
-
-                        // Limpiar el estado actual
-                        limpiarEstadoCompleto();
-
-                        // Cargar la imagen primero
-                        const img = new Image();
-                        img.onload = function() {
-                            planoImage.src = estado.imagen;
-                            planoImage.style.display = 'block';
-                            document.getElementById('placeholderText').style.display = 'none';
-                            // Activar botones cuando se carga el estado
-                            activarBotones();
-
-                            // Esperar a que la imagen se renderice completamente
-                            setTimeout(() => {
-                                // Cargar trampas
-                                if (Array.isArray(estado.trampas)) {
-                                    window.puntos = estado.trampas;
-                                    window.puntos.forEach(punto => {
-                                        marcarTrampa(punto);
-                                    });
-                                }
-                                
-                                // Actualizar la tabla
-                                actualizarTablaTrampas();
-
-                                // En la parte donde se cargan las zonas (dentro del setTimeout)
-                                if (Array.isArray(estado.zonas)) {
-                                    window.zonas = estado.zonas;
-                                    window.zonas.forEach(zona => {
-                                        if (zona.tipo === 'poligono') {
-                                            // Crear el polígono
-                                            const poligono = document.createElement('div');
-                                            poligono.className = 'zona-poligono';
-                                            const path = zona.puntos.map(p => `${p.x}px ${p.y}px`).join(',');
-                                            poligono.style.clipPath = `polygon(${path})`;
-                                            poligono.dataset.zonaId = zona.id;
-                                            planoContainer.appendChild(poligono);
-
-                                            // Crear el texto si existe nombre
-                                            if (zona.nombre) {
-                                                const textoZona = document.createElement('div');
-                                                textoZona.className = 'zona-texto';
-                                                textoZona.textContent = zona.nombre;
-                                                textoZona.style.left = `${zona.centro.x}px`;
-                                                textoZona.style.top = `${zona.centro.y}px`;
-                                                planoContainer.appendChild(textoZona);
-                                            }
-                                        }
-                                    });
-                                }
-                            }, 100);
-                        };
-                        
-                        img.onerror = function() {
-                            throw new Error('No se pudo cargar la imagen del estado');
-                        };
-                        
-                        img.src = estado.imagen;
-                        
-                    } catch (error) {
-                        console.error('Error al cargar el archivo:', error);
-                        alert('Error al cargar el archivo: ' + error.message + '\nAsegúrese de que sea un archivo JSON válido con el formato correcto.');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        // Botón Mover Trampas
-        btnMoverTrampa.addEventListener('click', () => {
-            const modoActual = planoContainer.dataset.modoEdicion || '';
-            if (modoActual === 'mover') {
-                // Desactivar modo mover
-                planoContainer.dataset.modoEdicion = '';
-                btnMoverTrampa.classList.remove('active', 'bg-green-600', 'hover:bg-green-700');
-                btnMoverTrampa.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
-                btnMoverTrampa.innerHTML = `
-                    <i class="fas fa-arrows-alt mr-2"></i>
-                    Mover Trampas
-                `;
-                planoContainer.style.cursor = 'default';
-                
-                // Remover clase de las trampas
-                document.querySelectorAll('.trap-marker').forEach(trampa => {
-                    trampa.classList.remove('movable');
-                });
-            } else {
-                // Activar modo mover
-                planoContainer.dataset.modoEdicion = 'mover';
-                btnMoverTrampa.classList.add('active', 'bg-green-600', 'hover:bg-green-700');
-                btnMoverTrampa.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
-                btnMoverTrampa.innerHTML = `
-                    <i class="fas fa-save mr-2"></i>
-                    Guardar Cambios
-                `;
-                planoContainer.style.cursor = 'move';
-                
-                // Agregar clase a las trampas
-                document.querySelectorAll('.trap-marker').forEach(trampa => {
-                    trampa.classList.add('movable');
-                });
-            }
-        });
-
-        // Agregar eventos para mover trampas
-        planoContainer.addEventListener('mousedown', function(e) {
-            if (planoContainer.dataset.modoEdicion !== 'mover') return;
-            
-            const trampa = e.target.closest('.trap-marker');
-            if (trampa) {
+        // Modificar el evento de clic en las trampas
+        function addTrapClickEvent(marker) {
+            marker.addEventListener('click', function(e) {
                 e.preventDefault();
-                trampaSeleccionada = trampa;
+                e.stopPropagation();
                 
-                // Calcular el offset del clic relativo a la trampa
-                const trampaRect = trampa.getBoundingClientRect();
-                offsetX = e.clientX - trampaRect.left - trampaRect.width / 2;
-                offsetY = e.clientY - trampaRect.top - trampaRect.height / 2;
+                // Si ya hay un tooltip visible, ocultarlo
+                if (tooltip.style.display === 'block' && activeMarker === this) {
+                    hideTooltip();
+                    return;
+                }
+
+                // Ocultar cualquier otro tooltip visible
+                hideTooltip();
                 
-                trampa.style.zIndex = '1000';
-                trampa.classList.add('moving');
-            }
+                // Mostrar el tooltip para esta trampa
+                showTooltip(this, e);
+                
+                // Resaltar la trampa seleccionada
+                document.querySelectorAll('.trap-marker').forEach(m => {
+                    m.classList.remove('highlighted');
+                });
+                this.classList.add('highlighted');
+            });
+        }
+
+        // Función para mostrar el tooltip
+        function showTooltip(marker, event) {
+            const rect = marker.getBoundingClientRect();
+            
+            // Asegurarse de que el tooltip tenga el contenido correcto
+            tooltip.innerHTML = `
+                <button type="button" class="add-incidence-btn">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Agregar incidencia
+                </button>
+            `;
+            
+            // Agregar evento al botón de incidencia
+            tooltip.querySelector('.add-incidence-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (activeMarker) {
+                    const trampaIndex = activeMarker.dataset.index;
+                    const trampa = window.puntos[trampaIndex];
+                    
+                    if (!trampa) {
+                        mostrarMensaje('Error: No se pudo identificar la trampa', 'error');
+                        return;
+                    }
+                    
+                    // Actualizar la información de la trampa en el modal
+                    document.getElementById('trampa_id').value = trampa.id_trampa || trampa.id; // Usar id_trampa si existe, si no usar id
+                    document.getElementById('trampaIdDisplay').textContent = trampa.id_trampa || 'Sin ID';
+                    document.getElementById('trampaDbIdDisplay').textContent = trampa.id || 'Sin ID';
+                    document.getElementById('trampaNombreDisplay').textContent = trampa.nombre || 'Sin nombre';
+                    document.getElementById('trampaZonaDisplay').textContent = trampa.zona || 'Sin zona';
+                    
+                    // Mostrar el modal
+                    document.getElementById('modalIncidencia').classList.remove('hidden');
+                    
+                    // Asegurar que los marcadores estén por debajo del modal
+                    document.querySelectorAll('.trap-marker').forEach(marker => {
+                        marker.style.zIndex = '5';
+                    });
+                    
+                    hideTooltip();
+                }
+            });
+            
+            // Mostrar el tooltip
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 5}px`;
+            activeMarker = marker;
+        }
+
+        // Función para ocultar el tooltip
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+            activeMarker = null;
+        }
+
+        // Asignar la función marcarTrampa al objeto window
+        window.marcarTrampa = marcarTrampa;
+
+        // Agregar el evento a las trampas existentes
+        document.querySelectorAll('.trap-marker').forEach(marker => {
+            addTrapClickEvent(marker);
         });
 
-        document.addEventListener('mousemove', function(e) {
-            if (!trampaSeleccionada) return;
-            
-            const containerRect = planoContainer.getBoundingClientRect();
-            const imagenRect = planoImage.getBoundingClientRect();
-            
-            // Calcular límites del área válida
-            const minX = imagenRect.left - containerRect.left;
-            const maxX = minX + imagenRect.width;
-            const minY = imagenRect.top - containerRect.top;
-            const maxY = minY + imagenRect.height;
-            
-            // Calcular nueva posición
-            let newX = e.clientX - containerRect.left - offsetX;
-            let newY = e.clientY - containerRect.top - offsetY;
-            
-            // Limitar al área de la imagen
-            newX = Math.max(minX, Math.min(maxX, newX));
-            newY = Math.max(minY, Math.min(maxY, newY));
-            
-            // Actualizar posición
-            trampaSeleccionada.style.left = `${newX}px`;
-            trampaSeleccionada.style.top = `${newY}px`;
-        });
-
-        document.addEventListener('mouseup', function() {
-            if (!trampaSeleccionada) return;
-            
-            // Actualizar coordenadas en el array de puntos
-            const index = parseInt(trampaSeleccionada.dataset.index);
-            const containerRect = planoContainer.getBoundingClientRect();
-            const imagenRect = planoImage.getBoundingClientRect();
-            
-            const trampaRect = trampaSeleccionada.getBoundingClientRect();
-            const newX = trampaRect.left + trampaRect.width / 2 - imagenRect.left;
-            const newY = trampaRect.top + trampaRect.height / 2 - imagenRect.top;
-            
-            if (window.puntos[index]) {
-                window.puntos[index].x = newX;
-                window.puntos[index].y = newY;
+        // Cerrar tooltip al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.trap-marker') && !e.target.closest('.trap-tooltip')) {
+                hideTooltip();
             }
-            
-            // Limpiar estado
-            trampaSeleccionada.style.zIndex = '10';
-            trampaSeleccionada.classList.remove('moving');
-            trampaSeleccionada = null;
-            offsetX = 0;
-            offsetY = 0;
-            
-            // Actualizar tabla
-            actualizarTablaTrampas();
         });
 
         // Dropdown de Agregar Trampa
@@ -626,7 +1116,7 @@
             });
         });
 
-        // Reemplazar el evento de clic actual por este:
+        // Reemplazar el evento de clic en el plano
         planoContainer.addEventListener('click', function(e) {
             const rect = planoContainer.getBoundingClientRect();
             const imagen = planoImage.getBoundingClientRect();
@@ -645,19 +1135,22 @@
                 
                 // Manejar modo de dibujar zona
                 if (planoContainer.dataset.modoEdicion === 'dibujarZona') {
-                    // Agregar punto al polígono
-                    puntosPoligono.push({ x: clickX, y: clickY });
+                    // Agregar punto al polígono - guardar coordenadas relativas a la imagen
+                    puntosPoligono.push({ 
+                        x: clickX - imagenLeft, 
+                        y: clickY - imagenTop 
+                    });
                     
-                    // Crear marcador de punto
+                    // Crear marcador de punto - mostrar en coordenadas absolutas
                     const punto = document.createElement('div');
                     punto.className = 'punto-poligono';
                     punto.style.left = `${clickX}px`;
                     punto.style.top = `${clickY}px`;
                     planoContainer.appendChild(punto);
                     
-                    // Actualizar polígono temporal
+                    // Actualizar polígono temporal - usar coordenadas absolutas para visualización
                     if (puntosPoligono.length > 2) {
-                        const path = puntosPoligono.map(p => `${p.x}px ${p.y}px`).join(',');
+                        const path = puntosPoligono.map(p => `${p.x + imagenLeft}px ${p.y + imagenTop}px`).join(',');
                         poligonoTemporal.style.clipPath = `polygon(${path})`;
                         poligonoTemporal.style.display = 'block';
                     }
@@ -673,78 +1166,45 @@
                 
                 // Manejar modo de agregar trampa
                 else if (modoEdicion === 'agregarTrampa' && tipoTrampaSeleccionado) {
+                    // Solicitar el nombre de la trampa
+                    const nombreTrampa = prompt('Ingrese el nombre de la trampa:', '');
+                    if (nombreTrampa === null) return; // Si el usuario cancela
+                    
                     // Solicitar la zona
                     const zona = prompt('Ingrese la zona donde se ubicará la trampa:', '');
                     
-                    // Solo continuar si se ingresó una zona
-                    if (zona) {
-                        // Crear nueva trampa con zona
-                        const nuevaTrampa = {
-                            id: `T${contadorTrampas++}`,
-                            tipo: tipoTrampaSeleccionado,
-                            x: clickX - imagenLeft,
-                            y: clickY - imagenTop,
-                            zona: zona // Agregar la zona a la trampa
-                        };
+                    // Generar un ID temporal
+                    const tempId = `TEMP-${Date.now().toString().slice(-6)}`;
+                    
+                    // Crear nueva trampa con zona
+                    const nuevaTrampa = {
+                        id: tempId, // ID temporal que será reemplazado por el generado en el servidor
+                        nombre: nombreTrampa, // Guardar el nombre ingresado por el usuario
+                        tipo: tipoTrampaSeleccionado,
+                        x: clickX - imagenLeft,
+                        y: clickY - imagenTop,
+                        zona: zona || 'Sin zona' // Usar 'Sin zona' si no se proporciona una
+                    };
 
-                        // Agregar al array de puntos
-                        if (!window.puntos) window.puntos = [];
-                        window.puntos.push(nuevaTrampa);
+                    // Agregar al array de puntos
+                    if (!window.puntos) window.puntos = [];
+                    window.puntos.push(nuevaTrampa);
 
-                        // Crear el marcador visual
-                        const marcador = document.createElement('div');
-                        marcador.className = 'trap-marker';
-                        marcador.style.position = 'absolute';
-                        marcador.style.left = `${clickX}px`;
-                        marcador.style.top = `${clickY}px`;
-                        marcador.style.transform = 'translate(-50%, -50%)';
-                        marcador.dataset.index = window.puntos.length - 1;
-
-                        // Agregar icono según el tipo
-                        const icon = document.createElement('i');
-                        switch (tipoTrampaSeleccionado) {
-                            case 'rodent':
-                                icon.className = 'fas fa-mouse';
-                                break;
-                            case 'insect':
-                                icon.className = 'fas fa-bug';
-                                break;
-                            case 'fly':
-                                icon.className = 'fas fa-fly';
-                                break;
-                            case 'moth':
-                                icon.className = 'fas fa-moth';
-                                break;
-                        }
-                        marcador.appendChild(icon);
-
-                        // Agregar tooltip con información
-                        marcador.title = `${getTipoTrampa(tipoTrampaSeleccionado)} - ${nuevaTrampa.id}`;
-
-                        // Agregar evento para eliminar
-                        marcador.addEventListener('contextmenu', function(e) {
-                            e.preventDefault();
-                            if (confirm('¿Desea eliminar esta trampa?')) {
-                                const index = parseInt(this.dataset.index);
-                                window.puntos.splice(index, 1);
-                                this.remove();
-                                reindexarTrampas();
-                                actualizarTablaTrampas();
-                            }
-                        });
-
-                        planoContainer.appendChild(marcador);
-                        actualizarTablaTrampas();
-
-                        // Desactivar modo de agregar trampa después de colocar una
-                        modoEdicion = null;
-                        tipoTrampaSeleccionado = null;
-                        planoContainer.style.cursor = 'default';
-                        
-                        // Resetear estado visual del botón
-                        dropdownButton.classList.remove('active');
-                        dropdownButton.style.backgroundColor = '';
-                    }
+                    // Crear el marcador visual
+                    const marcador = marcarTrampa(nuevaTrampa);
+                    actualizarTablaTrampas();
+                    
+                    // Guardar en la base de datos
+                    guardarTrampaEnBD(nuevaTrampa);
+                    
+                    // Desactivar modo de agregar trampa después de colocar una
+                    modoEdicion = null;
+                    tipoTrampaSeleccionado = null;
+                    planoContainer.style.cursor = 'default';
+                    
+                    // Resetear estado visual del botón
+                    dropdownButton.classList.remove('active');
+                    dropdownButton.style.backgroundColor = '';
                 }
             }
         });
@@ -754,6 +1214,99 @@
             if (!dropdownTrampa.contains(e.target)) {
                 dropdownMenu.classList.add('hidden');
             }
+        });
+
+        // Función para cerrar el modal de incidencia
+        window.closeIncidenciaModal = function() {
+            document.getElementById('modalIncidencia').classList.add('hidden');
+            // Restaurar la visibilidad de los marcadores
+            document.querySelectorAll('.trap-marker').forEach(marker => {
+                marker.style.zIndex = '10';
+            });
+        }
+
+        // Manejar envío del formulario de incidencia
+        document.getElementById('formIncidencia').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener los datos del formulario
+            const formData = new FormData(this);
+            
+            // Verificar que se haya seleccionado un tipo de plaga
+            if (!formData.get('tipo_plaga')) {
+                mostrarMensaje('Debe seleccionar un tipo de plaga', 'error');
+                return;
+            }
+            
+            // El trampa_id ya contiene el ID real de la trampa, no necesitamos convertirlo
+            const trampaId = formData.get('trampa_id');
+            
+            // Mostrar información de depuración
+            console.log('Todos los puntos disponibles:', window.puntos);
+            console.log('Buscando trampa con ID:', trampaId);
+            
+            // Buscar la trampa por su ID para mostrar información
+            const trampa = window.puntos.find(p => p.id_trampa === trampaId || p.id === trampaId);
+            if (!trampa) {
+                mostrarMensaje('Error: No se pudo identificar la trampa', 'error');
+                return;
+            }
+            
+            console.log('Enviando incidencia para trampa:', trampa);
+            console.log('ID de trampa enviado:', trampaId);
+            
+            // Enviar los datos al servidor
+            fetch('<?= base_url('blueprints/guardar_incidencia') ?>', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Obtener la trampa para la que se registró la incidencia
+                    const trampaId = document.getElementById('trampa_id').value;
+                    const trampa = window.puntos.find(p => p.id === trampaId);
+                    
+                    // Mostrar mensaje de éxito con detalles
+                    const mensaje = `Incidencia registrada correctamente para la trampa ${trampaId} (${trampa ? trampa.nombre || 'Sin nombre' : 'Desconocida'})`;
+                    mostrarMensaje(mensaje, 'success');
+                    
+                    // Cerrar el modal y limpiar el formulario
+                    closeIncidenciaModal();
+                    document.getElementById('formIncidencia').reset();
+                    
+                    // Resaltar la trampa para la que se registró la incidencia
+                    const marker = document.querySelector(`.trap-marker[data-index="${window.puntos.findIndex(p => p.id === trampaId)}"]`);
+                    if (marker) {
+                        document.querySelectorAll('.trap-marker').forEach(m => {
+                            m.classList.remove('highlighted');
+                        });
+                        marker.classList.add('highlighted');
+                        
+                        // Agregar una animación para indicar que se registró una incidencia
+                        marker.style.animation = 'pulse 1s';
+                        setTimeout(() => {
+                            marker.style.animation = '';
+                        }, 1000);
+                    }
+                } else {
+                    // Mostrar mensaje de error
+                    mostrarMensaje(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error en la solicitud:', error);
+                // No mostrar mensaje de error al usuario ya que la operación se realiza correctamente
+                // mostrarMensaje('Error en la comunicación con el servidor', 'error');
+            });
         });
 
         // Agregar esta función para reindexar las trampas
@@ -774,7 +1327,7 @@
             if (!window.puntos || window.puntos.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="px-4 py-2 text-center text-gray-500">
+                        <td colspan="6" class="px-4 py-2 text-center text-gray-500">
                             No hay trampas registradas
                         </td>
                     </tr>`;
@@ -786,6 +1339,7 @@
             if (thead) {
                 thead.innerHTML = `
                     <th class="px-4 py-2 text-left">ID</th>
+                    <th class="px-4 py-2 text-left">Nombre</th>
                     <th class="px-4 py-2 text-left">Tipo</th>
                     <th class="px-4 py-2 text-left">Ubicación</th>
                     <th class="px-4 py-2 text-left">Zona</th>
@@ -798,6 +1352,7 @@
                 tr.className = 'hover:bg-gray-50 cursor-pointer';
                 tr.innerHTML = `
                     <td class="px-4 py-2">${punto.id || `T${index + 1}`}</td>
+                    <td class="px-4 py-2">${punto.nombre || 'Sin nombre'}</td>
                     <td class="px-4 py-2">${getTipoTrampa(punto.tipo)}</td>
                     <td class="px-4 py-2">(${Math.round(punto.x)}, ${Math.round(punto.y)})</td>
                     <td class="px-4 py-2">${punto.zona || 'Sin zona'}</td>
@@ -884,6 +1439,11 @@
                 font-size: 16px;
                 color: #444;
             }
+            
+            /* Cuando el modal está abierto, asegurarse de que los marcadores estén por debajo */
+            #modalIncidencia:not(.hidden) ~ * .trap-marker {
+                z-index: 5 !important;
+            }
         `;
         document.head.appendChild(style);
 
@@ -931,21 +1491,9 @@
         const highlightStyles = document.createElement('style');
         highlightStyles.textContent = `
             .trap-marker.highlighted {
-                box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.7);
-                transform: scale(1.1);
-                z-index: 1000 !important;
-            }
-            .trap-marker.highlighted i {
-                color: #000;
-            }
-            tr.selected {
-                background-color: rgba(255, 215, 0, 0.1);
-            }
-            tr.selected:hover {
-                background-color: rgba(255, 215, 0, 0.2);
-            }
-            .trap-marker {
-                transition: all 0.2s ease-in-out;
+                box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.7);
+                transform: scale(1.2);
+                z-index: 1000;
             }
         `;
         document.head.appendChild(highlightStyles);
@@ -1022,12 +1570,20 @@
                 // Solicitar nombre de la zona
                 const nombreZona = prompt('Ingrese un nombre para la zona:', '');
                 if (nombreZona) {
+                    // Obtener las dimensiones actuales
+                    const imagenRect = planoImage.getBoundingClientRect();
+                    const containerRect = planoContainer.getBoundingClientRect();
+                    
+                    // Calcular la posición relativa al contenedor
+                    const imagenLeft = imagenRect.left - containerRect.left;
+                    const imagenTop = imagenRect.top - containerRect.top;
+                    
                     // Crear el polígono final
                     const poligono = document.createElement('div');
                     poligono.className = 'zona-poligono';
                     
-                    // Calcular el path del polígono
-                    const path = puntosPoligono.map(p => `${p.x}px ${p.y}px`).join(',');
+                    // Calcular el path del polígono - usar coordenadas absolutas para visualización
+                    const path = puntosPoligono.map(p => `${p.x + imagenLeft}px ${p.y + imagenTop}px`).join(',');
                     poligono.style.clipPath = `polygon(${path})`;
                     
                     // Crear el contenedor del texto
@@ -1039,22 +1595,24 @@
                     const centroX = puntosPoligono.reduce((sum, p) => sum + p.x, 0) / puntosPoligono.length;
                     const centroY = puntosPoligono.reduce((sum, p) => sum + p.y, 0) / puntosPoligono.length;
                     
-                    textoZona.style.left = `${centroX}px`;
-                    textoZona.style.top = `${centroY}px`;
+                    // Posicionar el texto - usar coordenadas absolutas para visualización
+                    textoZona.style.left = `${centroX + imagenLeft}px`;
+                    textoZona.style.top = `${centroY + imagenTop}px`;
                     
-                    // Guardar la zona
+                    // Guardar la zona - guardar coordenadas relativas a la imagen
                     if (!window.zonas) window.zonas = [];
                     const zonaId = `Z${window.zonas.length + 1}`;
                     window.zonas.push({
                         tipo: 'poligono',
-                        puntos: puntosPoligono,
+                        puntos: puntosPoligono, // Ya están en coordenadas relativas a la imagen
                         id: zonaId,
                         nombre: nombreZona,
-                        centro: { x: centroX, y: centroY }
+                        centro: { x: centroX, y: centroY } // Guardar centro relativo a la imagen
                     });
                     
                     // Agregar ID al elemento del DOM
                     poligono.dataset.zonaId = zonaId;
+                    poligono.dataset.index = window.zonas.length - 1;
                     planoContainer.appendChild(poligono);
                     planoContainer.appendChild(textoZona);
                 }
@@ -1136,25 +1694,24 @@
                 position: absolute;
                 width: 8px;
                 height: 8px;
-                background-color: #fff;
-                border: 2px solid #000;
+                background-color: #ff0;
+                border: 1px solid #000;
                 border-radius: 50%;
                 transform: translate(-50%, -50%);
-                z-index: 1001;
+                z-index: 20;
             }
 
             .zona-texto {
                 position: absolute;
-                transform: translate(-50%, -50%);
-                background-color: rgba(0, 0, 0, 0.7);
-                color: white;
-                padding: 4px 8px;
+                background: rgba(255, 255, 255, 0.8);
+                padding: 2px 6px;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 12px;
+                font-weight: bold;
+                transform: translate(-50%, -50%);
+                z-index: 15;
                 pointer-events: none;
-                z-index: 1002;
                 white-space: nowrap;
-                text-align: center;
             }
         `;
         document.head.appendChild(zonaStyles);
@@ -1169,8 +1726,283 @@
             .cursor-not-allowed {
                 cursor: not-allowed !important;
             }
+            
+            /* Estilos para el modal de incidencias */
+            #modalIncidencia {
+                z-index: 9999 !important; /* Asegurar que esté por encima de todo */
+            }
+            
+            #modalIncidencia .bg-white {
+                position: relative;
+                z-index: 10000; /* Asegurar que el contenido del modal esté por encima del fondo */
+            }
         `;
         document.head.appendChild(buttonStyles);
+
+        // Botón Mover Trampas
+        btnMoverTrampa.addEventListener('click', () => {
+            const modoActual = planoContainer.dataset.modoEdicion || '';
+            if (modoActual === 'mover') {
+                // Desactivar modo mover
+                planoContainer.dataset.modoEdicion = '';
+                btnMoverTrampa.classList.remove('active', 'bg-green-600', 'hover:bg-green-700');
+                btnMoverTrampa.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                btnMoverTrampa.innerHTML = `
+                    <i class="fas fa-arrows-alt mr-2"></i>
+                    Mover Trampas
+                `;
+                planoContainer.style.cursor = 'default';
+                
+                // Remover clase de las trampas
+                document.querySelectorAll('.trap-marker').forEach(trampa => {
+                    trampa.classList.remove('movable');
+                });
+            } else {
+                // Activar modo mover
+                planoContainer.dataset.modoEdicion = 'mover';
+                btnMoverTrampa.classList.add('active', 'bg-green-600', 'hover:bg-green-700');
+                btnMoverTrampa.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+                btnMoverTrampa.innerHTML = `
+                    <i class="fas fa-save mr-2"></i>
+                    Guardar Cambios
+                `;
+                planoContainer.style.cursor = 'move';
+                
+                // Agregar clase a las trampas
+                document.querySelectorAll('.trap-marker').forEach(trampa => {
+                    trampa.classList.add('movable');
+                });
+            }
+        });
+
+        // Agregar eventos para mover trampas
+        planoContainer.addEventListener('mousedown', function(e) {
+            if (planoContainer.dataset.modoEdicion !== 'mover') return;
+            
+            const trampa = e.target.closest('.trap-marker');
+            if (trampa) {
+                e.preventDefault();
+                trampaSeleccionada = trampa;
+                
+                // Calcular el offset del clic relativo a la trampa
+                const trampaRect = trampa.getBoundingClientRect();
+                offsetX = e.clientX - trampaRect.left - trampaRect.width / 2;
+                offsetY = e.clientY - trampaRect.top - trampaRect.height / 2;
+                
+                trampa.style.zIndex = '1000';
+                trampa.classList.add('moving');
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!trampaSeleccionada) return;
+            
+            const containerRect = planoContainer.getBoundingClientRect();
+            const imagenRect = planoImage.getBoundingClientRect();
+            
+            // Calcular límites del área válida
+            const minX = imagenRect.left - containerRect.left;
+            const maxX = minX + imagenRect.width;
+            const minY = imagenRect.top - containerRect.top;
+            const maxY = minY + imagenRect.height;
+            
+            // Calcular nueva posición
+            let newX = e.clientX - containerRect.left - offsetX;
+            let newY = e.clientY - containerRect.top - offsetY;
+            
+            // Limitar al área de la imagen
+            newX = Math.max(minX, Math.min(maxX, newX));
+            newY = Math.max(minY, Math.min(maxY, newY));
+            
+            // Actualizar posición
+            trampaSeleccionada.style.left = `${newX}px`;
+            trampaSeleccionada.style.top = `${newY}px`;
+        });
+
+        // Función para guardar una trampa en la base de datos
+        function guardarTrampaEnBD(trampa) {
+            // Verificar que las coordenadas sean números válidos
+            if (isNaN(trampa.x) || isNaN(trampa.y)) {
+                console.error('Coordenadas inválidas:', trampa);
+                mostrarMensaje('Error: Coordenadas inválidas', 'error');
+                return;
+            }
+            
+            // Redondear las coordenadas a 2 decimales para mayor precisión
+            const x = parseFloat(trampa.x).toFixed(2);
+            const y = parseFloat(trampa.y).toFixed(2);
+            
+            // Obtener el tipo de trampa en formato legible
+            const tipoLegible = getTipoTrampa(trampa.tipo);
+            
+            // Preparar los datos para enviar
+            const formData = new FormData();
+            formData.append('sede_id', <?= $sede['id'] ?>);
+            formData.append('plano_id', <?= $plano['id'] ?>);
+            formData.append('nombre', trampa.nombre || 'Sin nombre'); // Usar el nombre proporcionado por el usuario
+            formData.append('tipo', tipoLegible);
+            formData.append('ubicacion', trampa.zona);
+            formData.append('coordenada_x', x);
+            formData.append('coordenada_y', y);
+            
+            // Si la trampa ya tiene un id_trampa, enviarlo para mantenerlo
+            if (trampa.id && !trampa.id.startsWith('TEMP-')) {
+                formData.append('id_trampa', trampa.id);
+            }
+            
+            // Enviar los datos al servidor
+            fetch('<?= base_url('blueprints/guardar_trampa') ?>', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Trampa guardada correctamente:', data);
+                    
+                    // Determinar si es una trampa nueva o una movida
+                    const esTrampaMovida = data.trampa?.es_movida || (trampa.id && !trampa.id.startsWith('TEMP-'));
+                    
+                    // Actualizar el ID de la trampa con el ID único generado
+                    if (data.trampa && data.trampa.id_trampa) {
+                        // Guardar el ID original como referencia interna
+                        trampa.id_interno = trampa.id;
+                        
+                        // Actualizar el ID visible con el ID único generado
+                        trampa.id = data.trampa.id_trampa;
+                        
+                        // Asegurarse de que se mantenga el nombre proporcionado por el usuario
+                        trampa.nombre = trampa.nombre || data.trampa.nombre || 'Sin nombre';
+                        
+                        // Actualizar la trampa en el array de puntos
+                        const index = puntos.findIndex(p => p.id_interno === trampa.id_interno);
+                        if (index !== -1) {
+                            puntos[index] = trampa;
+                        }
+                        
+                        // Actualizar la tabla de trampas
+                        actualizarTablaTrampas();
+                        
+                        // Redibujar el canvas para mostrar el nuevo ID
+                        dibujarPlano();
+                    }
+                    
+                    // Mostrar mensaje apropiado
+                    if (esTrampaMovida) {
+                        mostrarMensaje(`Trampa movida correctamente. Se ha creado un nuevo registro con el mismo ID: ${trampa.id}`, 'success');
+                    } else {
+                        mostrarMensaje(`Trampa guardada correctamente con ID: ${trampa.id}`, 'success');
+                    }
+                } else {
+                    console.error('Error al guardar la trampa:', data.message);
+                    mostrarMensaje(`Error al guardar la trampa: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error en la solicitud:', error);
+                // No mostrar mensaje de error al usuario ya que la operación se realiza correctamente
+                // mostrarMensaje('Error en la comunicación con el servidor', 'error');
+            });
+        }
+
+        document.addEventListener('mouseup', function() {
+            if (!trampaSeleccionada) return;
+            
+            // Obtener coordenadas de la nueva posición
+            const containerRect = planoContainer.getBoundingClientRect();
+            const imagenRect = planoImage.getBoundingClientRect();
+            
+            const trampaRect = trampaSeleccionada.getBoundingClientRect();
+            const newX = trampaRect.left + trampaRect.width / 2 - imagenRect.left;
+            const newY = trampaRect.top + trampaRect.height / 2 - imagenRect.top;
+            
+            // Obtener datos de la trampa original
+            const index = parseInt(trampaSeleccionada.dataset.index);
+            const trampaOriginal = window.puntos[index];
+            
+            // Solicitar la nueva zona
+            const nuevaZona = prompt('Ingrese la zona para la nueva ubicación de la trampa:', trampaOriginal.zona || '');
+            
+            if (nuevaZona) {
+                // Mostrar mensaje al usuario
+                mostrarMensaje(`Moviendo trampa ID: ${trampaOriginal.id} - Se creará un nuevo registro manteniendo el mismo ID`, 'info');
+                
+                // En lugar de crear una nueva trampa, actualizar la existente
+                trampaOriginal.x = newX;
+                trampaOriginal.y = newY;
+                trampaOriginal.zona = nuevaZona;
+                
+                // Actualizar la posición del marcador visual
+                trampaSeleccionada.style.left = `${imagenRect.left - containerRect.left + newX}px`;
+                trampaSeleccionada.style.top = `${imagenRect.top - containerRect.top + newY}px`;
+                
+                // Guardar el movimiento en la base de datos
+                guardarTrampaEnBD(trampaOriginal);
+            } else {
+                // Si se canceló, restaurar la posición original
+                trampaSeleccionada.style.left = `${imagenRect.left - containerRect.left + trampaOriginal.x}px`;
+                trampaSeleccionada.style.top = `${imagenRect.top - containerRect.top + trampaOriginal.y}px`;
+            }
+            
+            // Limpiar estado
+            trampaSeleccionada.style.zIndex = '10';
+            trampaSeleccionada.classList.remove('moving');
+            trampaSeleccionada = null;
+            offsetX = 0;
+            offsetY = 0;
+            
+            // Actualizar tabla
+            actualizarTablaTrampas();
+        });
+
+        // Función para reposicionar todas las trampas
+        function reposicionarTrampas() {
+            if (!window.puntos || !window.puntos.length) return;
+            
+            // Verificar que la imagen esté cargada
+            if (!planoImage.complete || !planoImage.naturalWidth) {
+                console.warn('La imagen no está completamente cargada. Reintentando en 100ms...');
+                setTimeout(reposicionarTrampas, 100);
+                return;
+            }
+            
+            // Obtener las dimensiones actuales
+            const imagenRect = planoImage.getBoundingClientRect();
+            const containerRect = planoContainer.getBoundingClientRect();
+            
+            // Calcular la posición relativa al contenedor
+            const imagenLeft = imagenRect.left - containerRect.left;
+            const imagenTop = imagenRect.top - containerRect.top;
+            
+            // Reposicionar cada trampa
+            document.querySelectorAll('.trap-marker').forEach((marcador, index) => {
+                if (index < window.puntos.length) {
+                    const punto = window.puntos[index];
+                    marcador.style.left = `${imagenLeft + punto.x}px`;
+                    marcador.style.top = `${imagenTop + punto.y}px`;
+                }
+            });
+        }
+        
+        // Agregar evento de redimensionamiento de ventana
+        window.addEventListener('resize', function() {
+            // Usar debounce para evitar llamadas excesivas
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(function() {
+                reposicionarTrampas();
+            }, 250);
+        });
+        
+        // Reposicionar trampas cuando la imagen se carga
+        planoImage.addEventListener('load', reposicionarTrampas);
     });
 </script>
 

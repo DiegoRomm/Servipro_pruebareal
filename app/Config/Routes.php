@@ -26,3 +26,6 @@ $routes->get('sedes/ver/(:num)', 'SedesController::ver/$1');
 $routes->get('sedes', 'SedesController::index');
 
 $routes->post('blueprints/guardar_plano', 'Blueprints::guardar_plano');
+$routes->post('blueprints/guardar_estado', 'Blueprints::guardar_estado');
+$routes->post('blueprints/guardar_trampa', 'Blueprints::guardar_trampa');
+$routes->post('blueprints/guardar_incidencia', 'Blueprints::guardar_incidencia');

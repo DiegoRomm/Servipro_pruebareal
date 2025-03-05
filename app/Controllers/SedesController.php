@@ -25,6 +25,7 @@ class SedesController extends BaseController
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
+            log_message('error', 'Validation failed: ' . print_r($validation->getErrors(), true));
             return redirect()->back()
                             ->withInput()
                             ->with('error', 'Por favor, complete todos los campos correctamente.');
@@ -43,13 +44,23 @@ class SedesController extends BaseController
                 'fecha_creacion' => $now->format('Y-m-d H:i:s')
             ];
 
+            // Log de los datos que se intentan guardar
+            log_message('info', 'Intentando guardar sede con datos: ' . print_r($data, true));
+
             // Guardar los datos en la base de datos
             $sedeModel = new SedeModel();
             $sedeModel->insert($data);
 
-            return redirect()->to('/')
+            // Log de éxito
+            log_message('info', 'Sede guardada correctamente con ID: ' . $sedeModel->getInsertID());
+
+            return redirect()->to('Inicio')
                             ->with('message', 'Sede guardada correctamente.');
         } catch (\Exception $e) {
+            // Log del error
+            log_message('error', 'Error al guardar sede: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
             return redirect()->back()
                             ->withInput()
                             ->with('error', 'Error al guardar la sede. Por favor, intente nuevamente.');

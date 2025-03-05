@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateIncidenciasTable extends Migration
+class CrearIncidenciasTable extends Migration
 {
     public function up()
     {
@@ -16,17 +16,23 @@ class CreateIncidenciasTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'trampa_id' => [
+            'id_trampa' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
+                'null'       => false, // No permitimos valores nulos
             ],
             'fecha' => [
                 'type'       => 'DATETIME',
             ],
-            'resultado' => [
+            'tipo_plaga' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
+            ],
+            'tipo_incidencia' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '100',
+                'null'       => true,
             ],
             'notas' => [
                 'type'       => 'TEXT',
@@ -40,10 +46,10 @@ class CreateIncidenciasTable extends Migration
 
         // Definir la clave primaria
         $this->forge->addPrimaryKey('id');
-
-        // Definir la clave foránea
-        $this->forge->addForeignKey('trampa_id', 'trampas', 'id', 'CASCADE', 'CASCADE');
-
+        
+        // Definir la clave foránea a la tabla trampas
+        $this->forge->addForeignKey('id_trampa', 'trampas', 'id', 'CASCADE', 'CASCADE');
+        
         // Crear la tabla
         $this->forge->createTable('incidencias');
     }

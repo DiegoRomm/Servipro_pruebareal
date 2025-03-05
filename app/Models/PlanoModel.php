@@ -10,7 +10,7 @@ class PlanoModel extends Model
     protected $primaryKey = 'id';     // Clave primaria
     protected $useAutoIncrement = true;
 
-    protected $allowedFields = ['nombre', 'descripcion', 'sede_id', 'fecha_creacion']; // Campos permitidos
+    protected $allowedFields = ['nombre', 'descripcion', 'sede_id', 'fecha_creacion', 'archivo']; // Campos permitidos
 
     protected $useTimestamps = true;
     protected $createdField = 'fecha_creacion';

@@ -24,18 +24,19 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
-    public array $default = [
+    
+     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => '',
-        'password'     => '',
-        'database'     => '',
+        'username'     => 'u976386866_servipro',
+        'password'     => 'qvpDq:F:&9O',
+        'database'     => 'u976386866_servipro',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
         'DBDebug'      => true,
-        'charset'      => 'utf8mb4',
-        'DBCollat'     => 'utf8mb4_general_ci',
+        'charset'      => 'utf8',
+        'DBCollat'     => 'utf8_general_ci',
         'swapPre'      => '',
         'encrypt'      => false,
         'compress'     => false,
@@ -50,7 +51,6 @@ class Database extends Config
             'time'     => 'H:i:s',
         ],
     ];
-
     //    /**
     //     * Sample database connection for SQLite3.
     //     *
