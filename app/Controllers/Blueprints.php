@@ -325,7 +325,9 @@ class Blueprints extends BaseController
             
             // Usar el ID de la trampa encontrada
             $idTrampaReciente = $trampa['id'];
-            log_message('info', 'ID de trampa encontrado: ' . $idTrampaReciente);
+            // Obtener el ID de la sede asociada a la trampa
+            $idSede = $trampa['sede_id'];
+            log_message('info', 'ID de trampa encontrado: ' . $idTrampaReciente . ', ID de sede: ' . $idSede);
             
             // Cargar el modelo de incidencias
             $incidenciaModel = new \App\Models\IncidenciaModel();
@@ -333,6 +335,7 @@ class Blueprints extends BaseController
             // Preparar los datos para guardar
             $data = [
                 'id_trampa' => $idTrampaReciente, // Usamos el ID de la trampa encontrada
+                'sede_id' => $idSede, // Agregamos el ID de la sede
                 'fecha' => date('Y-m-d H:i:s'),
                 'tipo_plaga' => $tipoPlaga,
                 'tipo_incidencia' => $tipoIncidencia ?? 'Detección',

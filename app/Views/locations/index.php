@@ -9,10 +9,15 @@
             <p class="text-gray-500">Análisis y métricas detalladas por sede</p>
         </div>
         <div class="flex flex-col md:flex-row gap-3">
-            <select class="w-full md:w-64 p-2 border border-gray-300 rounded-lg bg-white">
-                <option>Sede Central</option>
-                <option>Sede Norte</option>
-                <option>Sede Sur</option>
+            <select id="sede-selector" class="w-full md:w-64 p-2 border border-gray-300 rounded-lg bg-white" onchange="cambiarSede(this.value)">
+                <?php if(empty($sedes)): ?>
+                    <option>No hay sedes disponibles</option>
+                <?php else: ?>
+                    <option value="">Seleccione una sede</option>
+                    <?php foreach($sedes as $sede): ?>
+                        <option value="<?= $sede['id'] ?>" <?= ($sedeSeleccionada == $sede['id']) ? 'selected' : '' ?>><?= esc($sede['nombre']) ?></option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
             <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download">
@@ -31,14 +36,14 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold">Total Trampas</h3>
             <p class="text-sm text-gray-500">Trampas activas</p>
-            <p class="text-4xl font-bold mt-2">24</p>
+            <p class="text-4xl font-bold mt-2"><?= $totalTrampasSede ?? 0 ?></p>
         </div>
 
         <!-- Capturas -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold">Capturas</h3>
             <p class="text-sm text-gray-500">Este mes</p>
-            <p class="text-4xl font-bold mt-2 text-blue-600">18</p>
+            <p class="text-4xl font-bold mt-2 text-blue-600"><?= $totalCapturas ?? 0 ?></p>
         </div>
 
         <!-- Efectividad -->
@@ -113,4 +118,12 @@
         </div>
     </div>
 </div>
+
+<script>
+function cambiarSede(sedeId) {
+    if (sedeId) {
+        window.location.href = '<?= base_url('locations') ?>?sede_id=' + sedeId;
+    }
+}
+</script>
 <?= $this->endSection() ?> 
